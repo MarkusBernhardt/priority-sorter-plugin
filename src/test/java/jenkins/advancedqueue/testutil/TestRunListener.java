@@ -16,7 +16,7 @@ import jenkins.advancedqueue.sorter.QueueItemCache;
 import org.junit.Assert;
 
 @Extension
-public class TestRunListener extends RunListener<Run> {
+public class TestRunListener extends RunListener<Run<?,?>> {
 
 	private final static Logger LOGGER = Logger.getLogger(TestRunListener.class.getName());
 
@@ -29,7 +29,7 @@ public class TestRunListener extends RunListener<Run> {
 	}
 
 	@Override
-	public void onStarted(Run r, TaskListener listener) {
+	public void onStarted(Run<?,?> r, TaskListener listener) {
 		LOGGER.info("ON STARTED: " + r.getParent().getName());
 		try {
 			ItemInfo item = QueueItemCache.get().getItem(r.getParent().getName());
