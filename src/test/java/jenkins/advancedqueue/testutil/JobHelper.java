@@ -1,27 +1,25 @@
 package jenkins.advancedqueue.testutil;
 
-import hudson.Launcher;
-import hudson.matrix.AxisList;
-import hudson.matrix.MatrixProject;
-import hudson.matrix.TextAxis;
-import hudson.model.BuildListener;
-import hudson.model.AbstractBuild;
-import hudson.model.Cause;
-import hudson.model.FreeStyleProject;
-import hudson.model.Project;
-import hudson.tasks.Builder;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import jenkins.model.Jenkins;
-
 import org.jvnet.hudson.test.JenkinsRule;
 
+import hudson.Launcher;
+import hudson.matrix.AxisList;
+import hudson.matrix.MatrixProject;
+import hudson.matrix.TextAxis;
+import hudson.model.AbstractBuild;
+import hudson.model.BuildListener;
+import hudson.model.Cause;
+import hudson.model.FreeStyleProject;
+import hudson.tasks.Builder;
+import jenkins.model.Jenkins;
+
 public class JobHelper {
-	
+
 	private final static Logger LOGGER = Logger.getLogger(JobHelper.class.getName());
 
 	public JenkinsRule j;
@@ -62,14 +60,14 @@ public class JobHelper {
 		for (int i = 0; i < numberOfProjects; i++) {
 			MatrixProject project = j.createMatrixProject("Matrix " + i);
 			project.getBuildersList().add(new TestBuilder(100));
-	        AxisList axes = new AxisList();
-	        axes.add(new TextAxis(i + "A1", i + "A2", i + "A3"));
-	        project.setAxes(axes);
+			AxisList axes = new AxisList();
+			axes.add(new TextAxis(i + "A1", i + "A2", i + "A3"));
+			project.setAxes(axes);
 			projects.add(project);
 		}
 		return projects;
 	}
-	
+
 	public JobHelper scheduleMatrixProjects(Cause... causes) throws Exception {
 		List<MatrixProject> projects = createMatrixProjects(causes.length);
 		// Scheduling executors is zero
@@ -94,7 +92,7 @@ public class JobHelper {
 		// Set the executors to one and restart
 		Jenkins.getInstance().setNumExecutors(1);
 		// TODO: is there any other way to make the 1 take effect than a reload?
-		Jenkins.getInstance().reload();			
+		Jenkins.getInstance().reload();
 	}
-	
+
 }

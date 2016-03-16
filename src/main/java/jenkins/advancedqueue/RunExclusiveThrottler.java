@@ -42,10 +42,10 @@ public class RunExclusiveThrottler {
 	};
 	
 	@Extension
-	static public class RunExclusiveRunListener extends RunListener<Run> {
+	static public class RunExclusiveRunListener extends RunListener<Run<?,?>> {
 
 		@Override
-		public void onStarted(Run r, TaskListener listener) {
+		public void onStarted(Run<?,?> r, TaskListener listener) {
 			JobGroup jobGroup = PriorityConfiguration.get().getJobGroup(dummyCallback, r.getParent());
 			if (jobGroup != null && jobGroup.isRunExclusive()) {
 				exclusiveJobGroupId = jobGroup.getId();
@@ -55,7 +55,7 @@ public class RunExclusiveThrottler {
 		}
 
 		@Override
-		public void onCompleted(Run r, TaskListener listener) {
+		public void onCompleted(Run<?,?> r, TaskListener listener) {
 			exclusiveJobs.remove(r.getParent().getName());
 		}
 

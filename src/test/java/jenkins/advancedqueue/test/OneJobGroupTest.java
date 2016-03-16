@@ -1,16 +1,15 @@
 package jenkins.advancedqueue.test;
 
-import hudson.cli.BuildCommand.CLICause;
-import hudson.model.Cause;
-import hudson.model.FreeStyleProject;
-import jenkins.advancedqueue.testutil.ExpectedItem;
-import jenkins.advancedqueue.testutil.JobHelper;
-import jenkins.advancedqueue.testutil.TestRunListener;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.recipes.LocalData;
+
+import hudson.cli.BuildCommand.CLICause;
+import hudson.model.Cause;
+import jenkins.advancedqueue.testutil.ExpectedItem;
+import jenkins.advancedqueue.testutil.JobHelper;
+import jenkins.advancedqueue.testutil.TestRunListener;
 
 public class OneJobGroupTest {
 

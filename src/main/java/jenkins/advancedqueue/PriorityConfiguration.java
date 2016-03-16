@@ -23,25 +23,6 @@
  */
 package jenkins.advancedqueue;
 
-import hudson.DescriptorExtensionList;
-import hudson.Extension;
-import hudson.ExtensionList;
-import hudson.Plugin;
-import hudson.matrix.MatrixConfiguration;
-import hudson.matrix.MatrixProject;
-import hudson.model.Describable;
-import hudson.model.Descriptor;
-import hudson.model.Job;
-import hudson.model.Queue;
-import hudson.model.RootAction;
-import hudson.model.TopLevelItem;
-import hudson.model.ViewGroup;
-import hudson.model.View;
-import hudson.security.ACL;
-import hudson.security.Permission;
-import hudson.util.FormValidation;
-import hudson.util.ListBoxModel;
-
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
@@ -50,19 +31,10 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import javax.servlet.ServletException;
-
-import jenkins.advancedqueue.jobinclusion.JobInclusionStrategy;
-import jenkins.advancedqueue.priority.PriorityStrategy;
-import jenkins.advancedqueue.sorter.ItemInfo;
-import jenkins.advancedqueue.sorter.QueueItemCache;
-import jenkins.model.Jenkins;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
@@ -70,14 +42,38 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
+import hudson.DescriptorExtensionList;
+import hudson.Extension;
+import hudson.ExtensionList;
+import hudson.Plugin;
+import hudson.matrix.MatrixConfiguration;
+import hudson.model.Describable;
+import hudson.model.Descriptor;
+import hudson.model.Job;
+import hudson.model.Queue;
+import hudson.model.RootAction;
+import hudson.model.TopLevelItem;
+import hudson.model.View;
+import hudson.model.ViewGroup;
+import hudson.security.ACL;
+import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
+import jenkins.advancedqueue.jobinclusion.JobInclusionStrategy;
+import jenkins.advancedqueue.priority.PriorityStrategy;
+import jenkins.model.Jenkins;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+
 /**
  * @author Magnus Sandberg
  * @since 2.0
  */
 @Extension
-public class PriorityConfiguration extends Descriptor<PriorityConfiguration> implements RootAction, Describable<PriorityConfiguration> {
+public class PriorityConfiguration extends Descriptor<PriorityConfiguration>
+		implements RootAction, Describable<PriorityConfiguration> {
 
-	private final static Logger LOGGER = Logger.getLogger(PriorityConfiguration.class.getName());
+	// private final static Logger LOGGER =
+	// Logger.getLogger(PriorityConfiguration.class.getName());
 
 	transient private Map<Integer, JobGroup> id2jobGroup;
 	transient private PriorityConfigurationMatrixHelper priorityConfigurationMatrixHelper;
@@ -105,7 +101,7 @@ public class PriorityConfiguration extends Descriptor<PriorityConfiguration> imp
 		}
 		//
 		Plugin plugin = Jenkins.getInstance().getPlugin("matrix-project");
-		if(plugin == null || !plugin.getWrapper().isEnabled()){
+		if (plugin == null || !plugin.getWrapper().isEnabled()) {
 			priorityConfigurationMatrixHelper = null;
 		} else {
 			priorityConfigurationMatrixHelper = new PriorityConfigurationMatrixHelper();
@@ -150,11 +146,10 @@ public class PriorityConfiguration extends Descriptor<PriorityConfiguration> imp
 	public ExtensionList<Descriptor<PriorityStrategy>> getPriorityStrategyDescriptors() {
 		return PriorityStrategy.all();
 	}
-	
+
 	public DescriptorExtensionList<JobInclusionStrategy, Descriptor<JobInclusionStrategy>> getJobInclusionStrategyDescriptors() {
 		return JobInclusionStrategy.all();
 	}
-
 
 	public ListBoxModel getPriorities() {
 		ListBoxModel items = PrioritySorterConfiguration.get().doGetPriorityItems();
@@ -206,17 +201,19 @@ public class PriorityConfiguration extends Descriptor<PriorityConfiguration> imp
 		}
 	}
 
-	private PriorityConfigurationCallback getPriorityInternal(Queue.Item item, PriorityConfigurationCallback priorityCallback) {
+	private PriorityConfigurationCallback getPriorityInternal(Queue.Item item,
+			PriorityConfigurationCallback priorityCallback) {
 
 		if (!(item.task instanceof Job)) {
 			// Not a job generally this mean that this is a lightweight task so
 			// priority doesn't really matter - returning default priority
 			priorityCallback.addDecisionLog(0, "Queue.Item is not a Job - Assigning global default priority");
-			return priorityCallback.setPrioritySelection(PrioritySorterConfiguration.get().getStrategy().getDefaultPriority());
+			return priorityCallback
+					.setPrioritySelection(PrioritySorterConfiguration.get().getStrategy().getDefaultPriority());
 		}
 
 		Job<?, ?> job = (Job<?, ?>) item.task;
-		
+
 		if (priorityConfigurationMatrixHelper != null && priorityConfigurationMatrixHelper.isMatrixConfiguration(job)) {
 			return priorityConfigurationMatrixHelper.getPriority((MatrixConfiguration) job, priorityCallback);
 		}
@@ -228,7 +225,8 @@ public class PriorityConfiguration extends Descriptor<PriorityConfiguration> imp
 		}
 		//
 		priorityCallback.addDecisionLog(0, "Assigning global default priority");
-		return priorityCallback.setPrioritySelection(PrioritySorterConfiguration.get().getStrategy().getDefaultPriority());
+		return priorityCallback
+				.setPrioritySelection(PrioritySorterConfiguration.get().getStrategy().getDefaultPriority());
 	}
 
 	public JobGroup getJobGroup(PriorityConfigurationCallback priorityCallback, Job<?, ?> job) {
@@ -244,26 +242,27 @@ public class PriorityConfiguration extends Descriptor<PriorityConfiguration> imp
 		}
 		return null;
 	}
-	
+
 	private boolean isJobInView(Job<?, ?> job, View view) {
-		if(view instanceof ViewGroup) {
+		if (view instanceof ViewGroup) {
 			return isJobInViewGroup(job, (ViewGroup) view);
 		} else {
-			return view.contains((TopLevelItem) job); 
+			return view.contains((TopLevelItem) job);
 		}
 	}
-	
+
 	private boolean isJobInViewGroup(Job<?, ?> job, ViewGroup viewGroup) {
 		Collection<View> views = viewGroup.getViews();
 		for (View view : views) {
-			if(isJobInView(job, view)) {
+			if (isJobInView(job, view)) {
 				return true;
 			}
 		}
 		return false;
 	}
-	
-	private PriorityConfigurationCallback getPriorityForJobGroup(PriorityConfigurationCallback priorityCallback, JobGroup jobGroup, Queue.Item item) {
+
+	private PriorityConfigurationCallback getPriorityForJobGroup(PriorityConfigurationCallback priorityCallback,
+			JobGroup jobGroup, Queue.Item item) {
 		int priority = jobGroup.getPriority();
 		PriorityStrategy reason = null;
 		if (jobGroup.isUsePriorityStrategies()) {
@@ -271,11 +270,13 @@ public class PriorityConfiguration extends Descriptor<PriorityConfiguration> imp
 			List<JobGroup.PriorityStrategyHolder> priorityStrategies = jobGroup.getPriorityStrategies();
 			for (JobGroup.PriorityStrategyHolder priorityStrategy : priorityStrategies) {
 				PriorityStrategy strategy = priorityStrategy.getPriorityStrategy();
-				priorityCallback.addDecisionLog(3, "Evaluating strategy [" + strategy.getDescriptor().getDisplayName() + "] ...");
+				priorityCallback.addDecisionLog(3,
+						"Evaluating strategy [" + strategy.getDescriptor().getDisplayName() + "] ...");
 				if (strategy.isApplicable(item)) {
 					priorityCallback.addDecisionLog(4, "Strategy is applicable");
 					int foundPriority = strategy.getPriority(item);
-					if (foundPriority > 0 && foundPriority <= PrioritySorterConfiguration.get().getStrategy().getNumberOfPriorities()) {
+					if (foundPriority > 0 && foundPriority <= PrioritySorterConfiguration.get().getStrategy()
+							.getNumberOfPriorities()) {
 						priority = foundPriority;
 						reason = strategy;
 						break;
